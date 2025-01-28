@@ -8,5 +8,5 @@ ENV BROWSERLESS_WS_ENDPOINT=https://browserless-uu0k.onrender.com
 # Expose the necessary port (usually 3000)
 EXPOSE 3000
 
-# Start Browserless service
-CMD ["--headless", "--disable-gpu", "--no-sandbox"]
+# Start Browserless service with proper executable
+CMD ["npm", "start", "--headless", "--disable-gpu", "--no-sandbox"]
