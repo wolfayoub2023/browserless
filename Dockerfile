@@ -10,4 +10,4 @@ ENV CONNECTION_TIMEOUT=1
 EXPOSE 3000
 
 # Start Browserless service with proper executable
-CMD echo "TIMEOUT is set to: $TIMEOUT" && npm start --headless --disable-gpu --no-sandbox
+CMD echo "CONNECTION_TIMEOUT is set to: $CONNECTION_TIMEOUT" && npm start --headless --disable-gpu --no-sandbox
