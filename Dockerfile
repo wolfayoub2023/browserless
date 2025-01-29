@@ -1,19 +1,44 @@
-# Use the official Browserless image as the base
-FROM browserless/chrome:latest
+ARG VERSION=latest
+FROM ghcr.io/browserless/base:$VERSION
+LABEL org.opencontainers.image.source https://github.com/browserless/browserless
 
-# Switch to root user
-USER root
+COPY fonts/* /usr/share/fonts/truetype/
+COPY src src/
+RUN rm -r src/routes/
+COPY src/routes/management src/routes/management/
+COPY src/routes/chrome src/routes/chrome/
 
-# Set environment variables for Browserless
-ENV TOKEN=rmCPGsBygD8xAcRDaaCcsyZVs6h2Bkm80SCsfqYzCK82ewADTdkj3sFtrhhwoEDF
-ENV BROWSERLESS_WS_ENDPOINT=https://browserless-uu0k.onrender.com
-ENV CONNECTION_TIMEOUT=-1
+RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections && \
+  apt-get -y -qq install software-properties-common &&\
+  apt-add-repository "deb http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" && \
+  apt-get -y -qq --no-install-recommends install \
+    fontconfig \
+    fonts-freefont-ttf \
+    fonts-gfs-neohellenic \
+    fonts-indic \
+    fonts-ipafont-gothic \
+    fonts-kacst \
+    fonts-liberation \
+    fonts-noto-cjk \
+    fonts-noto-color-emoji \
+    fonts-roboto \
+    fonts-thai-tlwg \
+    fonts-ubuntu \
+    fonts-wqy-zenhei \
+    fonts-open-sans
 
-# Install additional dependencies
-RUN npm install -g puppeteer-extra puppeteer-extra-plugin-stealth puppeteer-real-browser
+# NOTE it's important to not use npx playwright-core here since it'll likely install
+# a more recent version than we potentially have in our own package.json
+RUN ./node_modules/playwright-core/cli.js install --with-deps chrome &&\
+  npm install -g puppeteer-extra puppeteer-extra-plugin-stealth puppeteer-real-browser &&\
+  npm run build &&\
+  npm run build:function &&\
+  npm prune production &&\
+  npm run install:debugger &&\
+  chown -R blessuser:blessuser $APP_DIR &&\
+  fc-cache -f -v && \
+  apt-get -qq clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/fonts/truetype/noto
 
-# Expose the necessary port (usually 3000)
-EXPOSE 3000
+USER blessuser
 
-# Start Browserless service with proper executable
-CMD ["sh", "-c", "echo 'CONNECTION_TIMEOUT is set to: $CONNECTION_TIMEOUT' && npm start"]
+CMD ["./scripts/start.sh"]
