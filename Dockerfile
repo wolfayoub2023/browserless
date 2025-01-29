@@ -10,4 +10,4 @@ ENV TIMEOUT=-1  # Disable session timeout
 EXPOSE 3000
 
 # Start Browserless service with proper executable
-CMD ["npm", "start", "--headless", "--disable-gpu", "--no-sandbox"]
+CMD echo "TIMEOUT is set to: $TIMEOUT" && npm start --headless --disable-gpu --no-sandbox
